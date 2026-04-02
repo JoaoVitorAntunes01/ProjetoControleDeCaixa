@@ -17,14 +17,14 @@ import java.sql.SQLException;
 public class UsuarioDAO {
     public void cadastrar(UsuarioBean usuario) {
         try {
-            Connection conn = Conexao.conectar();
-            PreparedStatement stmt = null;
+            String sql = "insert into usuario (nome, usuario, senha) values (?,?,?)";
             
-            stmt = conn.prepareStatement("INSERT INTO usuarios (nome, usuario, senha, admin) VALUES (?,?,?,?)");
+            Connection conn = Conexao.conectar();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getUsuario());
             stmt.setString(3, usuario.getSenha());
-            stmt.setBoolean(4, false);
             
             stmt.executeUpdate();
             
@@ -34,7 +34,7 @@ public class UsuarioDAO {
     }
     
     public boolean existsByUsername(String username, String senha){
-        String sql = "SELECT 1 from usuarios where usuario = ? and senha = ?";
+        String sql = "SELECT 1 from usuario where usuario = ? and senha = ?";
        
         try(Connection conn = Conexao.conectar();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -58,7 +58,7 @@ public class UsuarioDAO {
             PreparedStatement stmt = null;
             ResultSet rs = null;
             
-            stmt = conn.prepareStatement("SELECT * FROM usuarios WHERE usuarios.usuario = ? AND usuarios.senha = ?");
+            stmt = conn.prepareStatement("select * from usuario where usuario = ? and senha = ?");
             stmt.setString(1, usuario);
             stmt.setString(2, senha);
             
@@ -68,7 +68,6 @@ public class UsuarioDAO {
                 user.setNome(rs.getString("nome"));
                 user.setUsuario(rs.getString("usuario"));
                 user.setSenha(rs.getString("senha"));
-                user.setAdmin(rs.getBoolean("admin"));
             }
             
         } catch(SQLException e) {

@@ -2,9 +2,13 @@ package view;
 
 import conexao.Conexao;
 import java.sql.*;
+import java.util.List;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JOptionPane;
 import model.CaixaBean;
+import model.CaixaDAO;
+import java.text.NumberFormat;
+import java.util.Locale;
 /**
  *
  * @author Usuario
@@ -12,6 +16,8 @@ import model.CaixaBean;
 public class Inicio extends javax.swing.JFrame {
     
     private final CaixaBean caixabean;
+    private CaixaDAO dao;
+    private DefaultTableModel tableModel;
     
     /**
      * Creates new form Inicio
@@ -19,10 +25,49 @@ public class Inicio extends javax.swing.JFrame {
 
     public Inicio() {
         caixabean = new CaixaBean();
+        dao = new CaixaDAO();
+        
         initComponents();
+        initTable();
+        loadAllClients();
+        updateValues();
     }
 
- 
+    private void initTable(){
+        tableModel = new DefaultTableModel(
+            new Object[]{"ID", "Cliente", "Tipo de Transferencia", "Valor(R$)"}, 0
+        ){
+            @Override
+            public boolean isCellEditable(int row, int column){
+                return false;
+            }
+        };
+        
+        tabelaContabilidade.setModel(tableModel);
+    }
+    
+    public void loadAllClients(){
+        tableModel.setRowCount(0);
+        
+        List<CaixaBean> clientes = dao.listAllClients();
+        
+        for (CaixaBean c : clientes){
+            tableModel.addRow(new Object[]{
+                c.getId(),
+                c.getCliente(),
+                c.getTipo(),
+                c.getValor()
+            });
+        }
+    }
+    
+    public void updateValues() {
+        CaixaDAO dao = new CaixaDAO();
+        NumberFormat formato = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        double saldo = dao.sumValues();
+        
+        totalField.setText(formato.format(saldo));
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -33,13 +78,10 @@ public class Inicio extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
-        btMensal = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
-        btDiario = new javax.swing.JButton();
         btAdicionar = new javax.swing.JButton();
         btDescontar = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tabelaContabilidade = new javax.swing.JTable();
         jPanel2 = new javax.swing.JPanel();
         totalField = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
@@ -48,32 +90,8 @@ public class Inicio extends javax.swing.JFrame {
 
         jPanel1.setBackground(new java.awt.Color(102, 102, 102));
 
-        btMensal.setBackground(new java.awt.Color(153, 153, 153));
-        btMensal.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        btMensal.setForeground(new java.awt.Color(255, 255, 255));
-        btMensal.setText("Mensal");
-        btMensal.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btMensalActionPerformed(evt);
-            }
-        });
-
-        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
-        jLabel1.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel1.setText("Período dos Registros");
-
-        btDiario.setBackground(new java.awt.Color(153, 153, 153));
-        btDiario.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        btDiario.setForeground(new java.awt.Color(255, 255, 255));
-        btDiario.setText("Diário");
-        btDiario.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btDiarioActionPerformed(evt);
-            }
-        });
-
         btAdicionar.setBackground(new java.awt.Color(102, 255, 102));
-        btAdicionar.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btAdicionar.setFont(new java.awt.Font("Franklin Gothic Medium", 0, 14)); // NOI18N
         btAdicionar.setText("Adicionar");
         btAdicionar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -82,7 +100,7 @@ public class Inicio extends javax.swing.JFrame {
         });
 
         btDescontar.setBackground(new java.awt.Color(255, 102, 102));
-        btDescontar.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btDescontar.setFont(new java.awt.Font("Franklin Gothic Medium", 0, 14)); // NOI18N
         btDescontar.setText("Descontar");
         btDescontar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -90,18 +108,36 @@ public class Inicio extends javax.swing.JFrame {
             }
         });
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        tabelaContabilidade.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
-                "ID", "Tipo", "Valor(R$)", "Data/Hora"
+                "ID", "Cliente", "Tipo", "Valor(R$)"
             }
-        ));
-        jScrollPane1.setViewportView(jTable1);
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(tabelaContabilidade);
+        if (tabelaContabilidade.getColumnModel().getColumnCount() > 0) {
+            tabelaContabilidade.getColumnModel().getColumn(0).setResizable(false);
+            tabelaContabilidade.getColumnModel().getColumn(1).setResizable(false);
+            tabelaContabilidade.getColumnModel().getColumn(2).setResizable(false);
+            tabelaContabilidade.getColumnModel().getColumn(3).setResizable(false);
+        }
+
+        totalField.setFont(new java.awt.Font("Franklin Gothic Medium", 0, 14)); // NOI18N
+        totalField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                totalFieldActionPerformed(evt);
+            }
+        });
 
         jLabel2.setFont(new java.awt.Font("Franklin Gothic Demi", 0, 24)); // NOI18N
         jLabel2.setText("Total:");
@@ -110,7 +146,7 @@ public class Inicio extends javax.swing.JFrame {
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 236, Short.MAX_VALUE)
             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel2Layout.createSequentialGroup()
                     .addContainerGap()
@@ -136,24 +172,14 @@ public class Inicio extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(97, 97, 97)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(148, 148, 148)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btDiario, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btMensal, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(88, 88, 88)
-                        .addComponent(jLabel1))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(97, 97, 97)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(btAdicionar, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(btDescontar, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 42, Short.MAX_VALUE)
+                        .addComponent(btAdicionar, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btDescontar, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 57, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 523, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(37, 37, 37))
         );
@@ -164,17 +190,12 @@ public class Inicio extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 405, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(18, 18, 18)
-                        .addComponent(btDiario, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(btMensal, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(36, 36, 36)
+                        .addGap(98, 98, 98)
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
+                        .addGap(28, 28, 28)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(btDescontar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btAdicionar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(btAdicionar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btDescontar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap(54, Short.MAX_VALUE))
         );
 
@@ -190,23 +211,28 @@ public class Inicio extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
-
-    private void btMensalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btMensalActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btMensalActionPerformed
-
-    private void btDiarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btDiarioActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btDiarioActionPerformed
 
     private void btAdicionarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btAdicionarActionPerformed
         // TODO add your handling code here:
+        AdicionarValor telaAdicionar = new AdicionarValor(this);
+        telaAdicionar.setVisible(true);
+        
+        this.dispose();
     }//GEN-LAST:event_btAdicionarActionPerformed
 
     private void btDescontarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btDescontarActionPerformed
         // TODO add your handling code here:
+        DescontarValor telaDescontar = new DescontarValor(this);
+        telaDescontar.setVisible(true);
+        
+        this.dispose();
     }//GEN-LAST:event_btDescontarActionPerformed
+
+    private void totalFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_totalFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_totalFieldActionPerformed
 
     /**
      * @param args the command line arguments
@@ -239,14 +265,11 @@ public class Inicio extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btAdicionar;
     private javax.swing.JButton btDescontar;
-    private javax.swing.JButton btDiario;
-    private javax.swing.JButton btMensal;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable tabelaContabilidade;
     private javax.swing.JTextField totalField;
     // End of variables declaration//GEN-END:variables
 }

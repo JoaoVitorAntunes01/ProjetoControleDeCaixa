@@ -170,6 +170,7 @@ public class Cadastro extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void nomeTxtActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nomeTxtActionPerformed
@@ -201,8 +202,7 @@ public class Cadastro extends javax.swing.JFrame {
             UsuarioBean usuarioRegistrado = new UsuarioBean(currentNome, currentUsuario, currentSenha); 
             
             dao.cadastrar(usuarioRegistrado);
-            this.dispose();
-            
+            this.dispose();    
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 

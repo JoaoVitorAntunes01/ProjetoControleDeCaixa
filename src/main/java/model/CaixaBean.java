@@ -3,27 +3,61 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package model;
-
-import java.sql.Timestamp;
 /**
  *
  * @author João Vitor Antunes
  */
 public class CaixaBean {
     private int id;
-    private String tipo;
+    private String cliente;
+    private TipoRecibo tipo;
     private double valor;
-    private Timestamp dataHora;
+    
+    public CaixaBean(){
+        
+    }
+    
+    public CaixaBean(int id, String cliente, TipoRecibo tipo, double valor){
+        this.id = id;
+        this.cliente = cliente;
+        this.tipo = tipo;
+        this.valor = valor;
+    }
+    
+    public enum TipoRecibo{
+        ENTRADA,
+        SAIDA
+    }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getId() {
+        return id;
+    }
 
-    public String getTipo() { return tipo; }
-    public void setTipo(String tipo) { this.tipo = tipo; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public double getValor() { return valor; }
-    public void setValor(double valor) { this.valor = valor; }
+    public String getCliente() {
+        return cliente;
+    }
 
-    public Timestamp getDataHora() { return dataHora; }
-    public void setDataHora(Timestamp dataHora) { this.dataHora = dataHora; }
+    public void setCliente(String cliente) {
+        this.cliente = cliente;
+    }
+
+    public TipoRecibo getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(TipoRecibo tipo) {
+        this.tipo = tipo;
+    }
+
+    public double getValor() {
+        return valor;
+    }
+
+    public void setValor(double valor) {
+        this.valor = valor;
+    }
 }
